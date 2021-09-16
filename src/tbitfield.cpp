@@ -13,51 +13,102 @@ static TBitField FAKE_BITFIELD(1);
 
 TBitField::TBitField(int len)
 {
+    BitLen = len;
+    MemLen = (len - 1) / 32 + 1;
+    pMem = new TELEM[MemLen];
+
+    for (int i = 0; i < MemLen; i++) {
+        pMem[i] = 0;
+    }
 }
 
 TBitField::TBitField(const TBitField &bf) // конструктор копирования
 {
+    BitLen = bf.BitLen;
+    MemLen = bf.MemLen;
+    pMem = new TELEM[MemLen];
+
+    for (int i = 0; i < MemLen; i++) {
+        pMem[i] = bf.pMem[i];
+    }
 }
 
 TBitField::~TBitField()
 {
+    BitLen = -1;
+    MemLen = -1;
+    delete[] pMem;
 }
 
 int TBitField::GetMemIndex(const int n) const // индекс Мем для бита n
 {
-    return FAKE_INT;
+    if (n < 0 || n >= BitLen) {
+        throw n;
+    }
+    return n / 32;
 }
 
 TELEM TBitField::GetMemMask(const int n) const // битовая маска для бита n
 {
-    return FAKE_INT;
+    if (n < 0 || n >= BitLen) {
+        throw n;
+    }
+    return 1 << n % 32;
 }
 
 // доступ к битам битового поля
 
 int TBitField::GetLength(void) const // получить длину (к-во битов)
 {
-  return FAKE_INT;
+  return BitLen;
 }
 
 void TBitField::SetBit(const int n) // установить бит
 {
+    if (n < 0 || n >= BitLen) {
+        throw n;
+    }
+    pMem[GetMemIndex(n)] |= GetMemMask(n);
 }
 
 void TBitField::ClrBit(const int n) // очистить бит
 {
+    if (n < 0 || n >= BitLen) {
+        throw n;
+    }
+    pMem[GetMemIndex(n)] &= ~GetMemMask(n);
 }
 
 int TBitField::GetBit(const int n) const // получить значение бита
 {
-  return FAKE_INT;
+    if (n < 0 || n >= BitLen) {
+        throw n;
+    }
+    return pMem[GetMemIndex(n)] &= GetMemMask(n) ? 1 : 0;
 }
 
 // битовые операции
 
 TBitField& TBitField::operator=(const TBitField &bf) // присваивание
 {
-    return FAKE_BITFIELD;
+    if (&bf == this) {
+        return *this;
+    }
+
+    BitLen = bf.BitLen;
+
+    if (MemLen != bf.MemLen) {
+        MemLen = bf.MemLen;
+
+        delete[] pMem;
+        pMem = new TELEM[MemLen];
+    }
+
+    for (int i = 0; i < MemLen; i++) {
+        pMem[i] = bf.pMem[i];
+    }
+
+    return *this;
 }
 
 int TBitField::operator==(const TBitField &bf) const // сравнение
@@ -77,6 +128,7 @@ TBitField TBitField::operator|(const TBitField &bf) // операция "или"
 
 TBitField TBitField::operator&(const TBitField &bf) // операция "и"
 {
+    
     return FAKE_BITFIELD;
 }
 
