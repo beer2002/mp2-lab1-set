@@ -146,12 +146,19 @@ istream &operator>>(istream &is, TSet &s) // ввод
 ostream& operator<<(ostream &os, const TSet &s) // вывод
 {
     os << "{";
-    
-    for (int i = 0; i < s.GetMaxPower() - 1; i++) {
-        os << s.BitField.GetBit(i) << ", ";
+    int i;
+    for (i = 0; i < s.GetMaxPower(); i++) {
+        if (s.BitField.GetBit(i)) {
+            os << i;
+            break;
+        }
     }
-
-    os << s.BitField.GetBit(s.GetMaxPower() - 1);
+    
+    for (i = i + 1; i < s.GetMaxPower(); i++) {
+        if (s.BitField.GetBit(i)) {
+            os << ", " << i;
+        }
+    }
 
     os << "}";
 
