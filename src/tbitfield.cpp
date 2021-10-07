@@ -13,6 +13,9 @@ static TBitField FAKE_BITFIELD(1);
 
 TBitField::TBitField(int len)
 {
+    if (len < 0) {
+        throw len;
+    }
     BitLen = len;
     MemLen = (len - 1) / 32 + 1;
     pMem = new TELEM[MemLen];
@@ -84,7 +87,8 @@ int TBitField::GetBit(const int n) const // получить значение б
     if (n < 0 || n >= BitLen) {
         throw n;
     }
-    return pMem[GetMemIndex(n)] &= GetMemMask(n) ? 1 : 0;
+
+    return pMem[GetMemIndex(n)] & GetMemMask(n) ? 1 : 0;
 }
 
 // битовые операции
@@ -113,38 +117,115 @@ TBitField& TBitField::operator=(const TBitField &bf) // присваивание
 
 int TBitField::operator==(const TBitField &bf) const // сравнение
 {
-  return FAKE_INT;
+    if (bf.MemLen != MemLen) {
+        return 0;
+    }
+
+    for (int i = 0; i < MemLen; i++) {
+        if (bf.pMem[i] != pMem[i]) {
+            return 0;
+        }
+    }
+
+    return 1;
 }
 
 int TBitField::operator!=(const TBitField &bf) const // сравнение
 {
-  return FAKE_INT;
+  return !operator==(bf);
 }
 
 TBitField TBitField::operator|(const TBitField &bf) // операция "или"
 {
-    return FAKE_BITFIELD;
+    TBitField bitField(BitLen > bf.BitLen ? BitLen : bf.BitLen);
+    if (BitLen > bf.BitLen) {
+        for (int i = 0; i < bf.MemLen; i++) {
+            bitField.pMem[i] = bf.pMem[i] | pMem[i];
+        }
+
+        for (int i = bf.MemLen; i < MemLen; i++) {
+            bitField.pMem[i] = pMem[i];
+        }
+    }
+    else {
+        for (int i = 0; i < MemLen; i++) {
+            bitField.pMem[i] = bf.pMem[i] | pMem[i];
+        }
+
+        for (int i = MemLen; i < bf.MemLen; i++) {
+            bitField.pMem[i] = bf.pMem[i];
+        }
+    }
+   
+    return bitField;
 }
 
 TBitField TBitField::operator&(const TBitField &bf) // операция "и"
 {
     
-    return FAKE_BITFIELD;
+    TBitField bitField(BitLen > bf.BitLen ? BitLen : bf.BitLen);
+    if (BitLen > bf.BitLen) {
+        for (int i = 0; i < bf.MemLen; i++) {
+            bitField.pMem[i] = bf.pMem[i] & pMem[i];
+        }
+
+        for (int i = bf.MemLen; i < MemLen; i++) {
+            bitField.pMem[i] = pMem[i];
+        }
+    }
+    else {
+        for (int i = 0; i < MemLen; i++) {
+            bitField.pMem[i] = bf.pMem[i] & pMem[i];
+        }
+
+        for (int i = MemLen; i < bf.MemLen; i++) {
+            bitField.pMem[i] = bf.pMem[i];
+        }
+    }
+
+    return bitField;
 }
 
 TBitField TBitField::operator~(void) // отрицание
-{
-    return FAKE_BITFIELD;
+{   
+    for (int i = 0; i < MemLen - 1; i++) {
+        pMem[i] = ~pMem[i];
+    }
+
+    for (int i = 32 * (MemLen - 1); i < BitLen; i++) {
+        if (GetBit(i)) {
+            ClrBit(i);
+        } else {
+            SetBit(i);
+        }
+    }
+
+    return *this;
 }
 
 // ввод/вывод
 
-istream &operator>>(istream &istr, TBitField &bf) // ввод
+istream &operator>>(istream &is, TBitField &bf) // ввод
 {
-    return istr;
+    char ch;
+    cout << "Input BitField: ";
+
+    for (int i = 0; i < bf.BitLen; i++) {
+        is >> ch;
+        if (ch == '1') {
+            bf.SetBit(i);
+        }
+    }
+    return is;
 }
 
-ostream &operator<<(ostream &ostr, const TBitField &bf) // вывод
+ostream &operator<<(ostream &os, const TBitField &bf) // вывод
 {
-    return ostr;
+    os << "BitField: ";
+
+    for (int i = 0; i < bf.BitLen; i++) {
+        os << bf.GetBit(i);
+    }
+
+    return os;
 }
